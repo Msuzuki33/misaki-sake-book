@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>美咲のおすすめ酒BOOK</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500&family=Zen+Antique&family=Hina+Mincho&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --sumi:   #1a1410;
+  --ai:     #1d2c4a;
+  --kinu:   #faf4e6;
+  --shu:    #9e2d1a;
+  --kogane: #b8913a;
+  --muted:  #6b5e4a;
+  --border: rgba(184,145,58,.22);
+}
+html, body { width:100%; height:100%; overflow:hidden; background:#100e0a; }
+
+#stage {
+  position:fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 30%, #2a2018 0%, #100e0a 100%);
+}
+#book {
+  position:relative;
+  width:min(390px,96vw); height:min(700px,88vh);
+  transform-style:preserve-3d; perspective:1400px;
+}
+#book::before {
+  content:''; position:absolute; left:0; top:0;
+  width:7px; height:100%;
+  background:linear-gradient(to right,rgba(0,0,0,.5),transparent);
+  z-index:20; pointer-events:none; border-radius:3px 0 0 3px;
+}
+.page {
+  position:absolute; inset:0;
+  background:var(--kinu);
+  border-radius:3px 10px 10px 3px;
+  overflow:hidden; backface-visibility:hidden;
+  transform-origin:left center;
+  box-shadow:8px 0 32px rgba(0,0,0,.6),-2px 0 6px rgba(0,0,0,.2);
+  transition:transform .75s cubic-bezier(.645,.045,.355,1);
+  will-change:transform; z-index:1;
+}
+.page.flipped { transform:rotateY(-180deg); }
+.page.no-anim { transition:none; }
+.page.active  { z-index:10; }
+.page.prev    { z-index:5; }
+.page-inner {
+  width:100%; height:100%;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.page-inner::-webkit-scrollbar { display:none; }
+
+/* ── Nav ── */
+#nav {
+  position:fixed;
+  bottom:max(20px,env(safe-area-inset-bottom,14px));
+  left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:10px; z-index:100;
+  background:rgba(16,14,10,.92);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(184,145,58,.3); border-radius:50px;
+  padding:9px 16px; box-shadow:0 4px 24px rgba(0,0,0,.5);
+}
+#nav button {
+  background:none; border:none; cursor:pointer;
+  color:var(--kogane); font-size:20px; padding:4px 6px;
+  opacity:.65; transition:opacity .2s;
+}
+#nav button:hover { opacity:1; }
+#nav button:active { transform:scale(.9); }
+#dots { display:flex; gap:6px; align-items:center; }
+.dot {
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(255,255,255,.18);
+  transition:background .3s,transform .3s;
+}
+.dot.on { background:var(--kogane); transform:scale(1.3); }
+#hint {
+  position:fixed; bottom:86px; left:50%; transform:translateX(-50%);
+  font-size:11px; color:rgba(255,255,255,.28); letter-spacing:.18em;
+  pointer-events:none; animation:fhint 4s ease 2s forwards; opacity:0;
+  font-family:'Noto Sans JP',sans-serif; white-space:nowrap;
+}
+@keyframes fhint {
+  0%{opacity:0;transform:translateX(-50%) translateY(5px)}
+  20%{opacity:1;transform:translateX(-50%) translateY(0)}
+  75%{opacity:1} 100%{opacity:0}
+}
+
+/* ══ 表紙 ══ */
+.cover {
+  min-height:100%; background:var(--ai);
+  position:relative; display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:52px 28px 88px; text-align:center; overflow:hidden;
+}
+.cover::before {
+  content:''; position:absolute; inset:0;
+  background-image:radial-gradient(circle at 50% 50%,transparent 28px,rgba(255,255,255,.025) 28px,rgba(255,255,255,.025) 30px,transparent 30px);
+  background-size:44px 44px; pointer-events:none;
+}
+.cover-grd { position:absolute; bottom:0; left:0; right:0; height:160px; background:linear-gradient(to top,rgba(10,8,5,.5),transparent); pointer-events:none; }
+.cover-frame  { position:absolute; inset:16px; border:1px solid rgba(184,145,58,.2); border-radius:2px; pointer-events:none; }
+.cover-frame2 { position:absolute; inset:22px; border:1px solid rgba(184,145,58,.1); border-radius:1px; pointer-events:none; }
+.cover-badge {
+  position:absolute; top:32px; left:50%; transform:translateX(-50%);
+  background:var(--shu); color:#fff;
+  font-size:9px; font-weight:500; letter-spacing:.3em; text-transform:uppercase;
+  padding:5px 20px; font-family:'Noto Sans JP',sans-serif;
+}
+.cover-kamon { font-size:42px; margin-bottom:14px; }
+.cover-catch { font-size:10px; letter-spacing:.4em; color:rgba(184,145,58,.75); margin-bottom:12px; font-family:'Noto Sans JP',sans-serif; }
+.cover-title { font-family:'Zen Antique',serif; font-size:32px; font-weight:400; color:#fff; line-height:1.4; letter-spacing:.06em; margin-bottom:6px; }
+.cover-subtitle { font-family:'Noto Serif JP',serif; font-size:13px; color:rgba(255,255,255,.45); letter-spacing:.12em; margin-bottom:28px; }
+.cover-hr { width:100%; height:1px; background:linear-gradient(to right,transparent,rgba(184,145,58,.4),transparent); margin:0 auto 24px; }
+.cover-toc { width:100%; }
+.cover-toc-item {
+  display:flex; align-items:center; gap:14px;
+  padding:12px 20px; border:1px solid rgba(184,145,58,.15);
+  border-radius:3px; margin-bottom:10px;
+  background:rgba(255,255,255,.04); text-align:left;
+}
+.cover-toc-icon { font-size:22px; flex-shrink:0; }
+.cover-toc-main { font-family:'Zen Antique',serif; font-size:14px; color:rgba(255,255,255,.85); margin-bottom:2px; }
+.cover-toc-sub { font-size:10px; color:rgba(255,255,255,.3); letter-spacing:.1em; font-family:'Noto Sans JP',sans-serif; }
+.cover-foot { position:absolute; bottom:30px; font-size:10px; color:rgba(255,255,255,.15); letter-spacing:.1em; font-family:'Noto Sans JP',sans-serif; }
+
+/* ══ セクションヘッダー ══ */
+.sec-header { padding:38px 26px 28px; position:relative; overflow:hidden; }
+.sec-header.c1 { background:var(--ai); }
+.sec-header.c2 { background:#1e1428; }
+.sec-header.c3 { background:#1a1208; }
+.sec-header::before {
+  content:''; position:absolute; inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:24px 24px; pointer-events:none;
+}
+.sec-bg-num {
+  position:absolute; right:14px; bottom:-12px;
+  font-family:'Zen Antique',serif; font-size:90px; font-weight:400;
+  color:rgba(255,255,255,.04); line-height:1; pointer-events:none;
+}
+.sec-no-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.sec-no-pill { background:var(--shu); color:#fff; font-size:9px; letter-spacing:.3em; padding:4px 12px; border-radius:2px; font-family:'Noto Sans JP',sans-serif; }
+.sec-no-line { flex:1; height:1px; background:rgba(184,145,58,.2); }
+.sec-emoji { font-size:28px; margin-bottom:10px; display:block; }
+.sec-title { font-family:'Zen Antique',serif; font-size:26px; font-weight:400; color:#fff; line-height:1.4; margin-bottom:12px; }
+.sec-intro p {
+  font-family:'Noto Serif JP',serif; font-weight:300;
+  font-size:12px; line-height:1.8; color:rgba(255,255,255,.5);
+}
+
+/* ══ 銘柄カード ══ */
+.sake-card {
+  padding:22px 24px 20px;
+  border-bottom:1px solid rgba(160,130,80,.15);
+  position:relative;
+}
+.sake-card:nth-child(odd)  { background:var(--kinu); }
+.sake-card:nth-child(even) { background:#f0e8d0; }
+.sake-card::before {
+  content:''; position:absolute; left:0; top:22px; bottom:20px;
+  width:3px; background:linear-gradient(to bottom,var(--kogane),transparent);
+  border-radius:0 2px 2px 0;
+}
+.sake-name { font-family:'Hina Mincho',serif; font-size:22px; font-weight:400; color:var(--sumi); line-height:1.2; margin-bottom:2px; }
+.sake-yomi { font-size:11px; color:var(--muted); letter-spacing:.1em; margin-bottom:10px; font-family:'Noto Sans JP',sans-serif; }
+.sake-brewery {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(29,44,74,.06); border:1px solid rgba(29,44,74,.15);
+  border-radius:3px; padding:4px 12px; margin-bottom:12px;
+  font-size:11px; color:var(--ai); font-family:'Noto Sans JP',sans-serif; letter-spacing:.05em;
+}
+/* ★ 行間詰め: paragraphの間に余白なし、行間だけ */
+.sake-body {
+  font-family:'Noto Serif JP',serif; font-weight:300;
+  font-size:14px; line-height:1.85; color:#3a2e20;
+}
+.sake-body br + br { display:none; } /* 連続改行対策 */
+
+/* ══ 銘柄リストページ ══ */
+.sake-list-page {
+  min-height:100%; background:var(--kinu);
+  padding:36px 28px 88px;
+}
+.sake-list-header {
+  text-align:center; margin-bottom:28px; padding-bottom:20px;
+  border-bottom:1px solid rgba(184,145,58,.3);
+}
+.sake-list-header-title {
+  font-family:'Zen Antique',serif; font-size:22px; color:var(--sumi);
+  letter-spacing:.1em; margin-bottom:6px;
+}
+.sake-list-header-sub {
+  font-family:'Noto Sans JP',sans-serif; font-size:10px;
+  color:var(--muted); letter-spacing:.2em;
+}
+.sake-list-section { margin-bottom:24px; }
+.sake-list-section-title {
+  font-family:'Zen Antique',serif; font-size:13px; color:var(--shu);
+  letter-spacing:.15em; margin-bottom:12px;
+  display:flex; align-items:center; gap:8px;
+}
+.sake-list-section-title::after {
+  content:''; flex:1; height:1px; background:rgba(158,45,26,.2);
+}
+.sake-list-item {
+  display:flex; align-items:baseline; gap:0;
+  padding:10px 0; border-bottom:1px dashed rgba(160,130,80,.2);
+  position:relative;
+}
+.sake-list-item::before {
+  content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+  width:3px; height:16px; background:var(--kogane); border-radius:2px;
+  opacity:.5;
+}
+.sake-list-name {
+  font-family:'Hina Mincho',serif; font-size:17px; color:var(--sumi);
+  padding-left:12px; flex:1; line-height:1.4;
+}
+.sake-list-brewery {
+  font-family:'Noto Sans JP',sans-serif; font-size:10px;
+  color:var(--muted); letter-spacing:.05em; text-align:right;
+  white-space:nowrap; padding-left:8px;
+}
+
+.back {
+  min-height:100%; background:var(--sumi);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:60px 36px 88px;
+  text-align:center; position:relative; overflow:hidden;
+}
+.back::before {
+  content:''; position:absolute; inset:0;
+  background-image:repeating-linear-gradient(45deg,rgba(184,145,58,.03) 0px,rgba(184,145,58,.03) 1px,transparent 1px,transparent 18px);
+  pointer-events:none;
+}
+.back-frame { position:absolute; inset:18px; border:1px solid rgba(184,145,58,.15); border-radius:2px; pointer-events:none; }
+.back-icon { font-size:52px; margin-bottom:20px; position:relative; }
+.back-ttl {
+  font-family:'Zen Antique',serif;
+  font-size:22px; font-weight:400; color:#fff; line-height:1.7; margin-bottom:24px;
+}
+.back-hr { width:50px; height:1px; background:rgba(184,145,58,.35); margin:0 auto 22px; }
+.back-msg {
+  font-family:'Noto Serif JP',serif; font-weight:300;
+  font-size:13px; line-height:2.0; color:rgba(255,255,255,.5);
+  margin-bottom:32px;
+}
+.back-btn {
+  border:1px solid rgba(184,145,58,.45); color:var(--kogane);
+  font-size:11px; letter-spacing:.28em; padding:13px 28px;
+  border-radius:2px; background:none; cursor:pointer;
+  transition:background .2s,color .2s; font-family:'Noto Sans JP',sans-serif;
+}
+.back-btn:hover { background:var(--kogane); color:var(--sumi); }
+.back-copy { position:absolute; bottom:28px; font-size:10px; color:rgba(255,255,255,.12); letter-spacing:.1em; font-family:'Noto Sans JP',sans-serif; }
+</style>
+</head>
+<body>
+<div id="stage">
+<div id="book">
+
+<!-- ══ PAGE 1: 表紙 ══ -->
+<div class="page" id="p0">
+<div class="page-inner">
+<div class="cover">
+  <div class="cover-frame"></div><div class="cover-frame2"></div>
+  <div class="cover-grd"></div>
+  <div class="cover-badge">Wedding 2025</div>
+  <div class="cover-kamon">🍶</div>
+  <div class="cover-catch">～日本酒が好きすぎる新婦～</div>
+  <div class="cover-title">美咲のおすすめ<br>酒　BOOK</div>
+  <div class="cover-subtitle">Misaki's Sake Selection</div>
+  <div class="cover-hr"></div>
+  <div class="cover-toc">
+    <div class="cover-toc-item">
+      <div class="cover-toc-icon">🐟</div>
+      <div>
+        <div class="cover-toc-main">Section 1　究極の食中酒</div>
+        <div class="cover-toc-sub">お魚に合う日本酒　5選</div>
+      </div>
+    </div>
+    <div class="cover-toc-item">
+      <div class="cover-toc-icon">🌙</div>
+      <div>
+        <div class="cover-toc-main">Section 2　モダン酒</div>
+        <div class="cover-toc-sub">お酒だけで楽しむ　5選</div>
+      </div>
+    </div>
+    <div class="cover-toc-item">
+      <div class="cover-toc-icon">🍶</div>
+      <div>
+        <div class="cover-toc-main">Section 3　変わり種</div>
+        <div class="cover-toc-sub">概念を覆す日本酒　5選</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-foot">© 美咲のおすすめ酒BOOK · 2025 Wedding</div>
+</div>
+</div>
+</div>
+
+<!-- ══ PAGE 2: Section 1 ══ -->
+<div class="page" id="p1">
+<div class="page-inner">
+  <div class="sec-header c1">
+    <div class="sec-bg-num">01</div>
+    <div class="sec-no-row"><div class="sec-no-pill">Section 1</div><div class="sec-no-line"></div></div>
+    <span class="sec-emoji">🐟</span>
+    <div class="sec-title">お魚に合う<br>「究極の食中酒」</div>
+    <div class="sec-intro">
+      <p>新婦は2025年にアニサキスたんぱくの食物アレルギーになってしまったので、お魚は食べられないのですが......笑<br>それでも日本酒といったら、やはりお魚でしょう！<br>ということでまとめてみました。</p>
+    </div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">阿部勘</div>
+    <div class="sake-yomi">あべかん</div>
+    <div class="sake-brewery">🏯 阿部勘酒造（宮城）</div>
+    <div class="sake-body">横浜の酒屋さん「一石屋」で教えてもらって以来、すっかり虜になった銘柄。<br>もともと宮城のお酒には好みのものが多いけど、阿部勘だけは自分で買いに行くほどの大のお気に入りです。お魚の宝庫塩釜の地酒なだけあって、お魚との相性は満点。<br>上品な香りと、魚の脂をさっぱり流してすっきり消えていく後味のバランスが最高なんです。<br>夏酒限定の透ける金魚デザインもすっごくおしゃれでお気に入り。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">大信州</div>
+    <div class="sake-yomi">だいしんしゅう</div>
+    <div class="sake-brewery">🏯 大信州酒造（長野）</div>
+    <div class="sake-body">学芸大学の居酒屋「ひとひら」で、初めて出会ったときの感動が忘れられない！<br>リンゴのような華やかな香りの日本酒です。さすが長野のお酒🍎<br>リンゴと聞くと、甘いのかな？と思うことでしょう。でも実は、驚くほど後味はドライ！<br>変な主張もなく、すっきりと消えていく潔さが、お刺身だけでなく焼き物にも相性抜群な優秀ちゃんです。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">満寿泉</div>
+    <div class="sake-yomi">ますいずみ</div>
+    <div class="sake-brewery">🏯 桝田酒造店（富山）</div>
+    <div class="sake-body">日本酒あるあるの初見殺しネーム。<br>「まんじゅせん」ではありません。「ますいずみ」と読みます。<br>上品な香りとスッと消える潔さが共存する、わたし好みのお酒。季節ごとのラベルもおしゃれで可愛くて、ついつい手に取ってしまいます。<br>なかでも忘れられないのが、両親との富山旅行。酒蔵直営の「沙石」で、たくさんの種類の満寿泉をセルフ飲み放題！あれは本当に幸せだった......。<br>富山に行く機会があれば、ぜひ立ち寄ってみて◎</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">別品 弥右衛門</div>
+    <div class="sake-yomi">やうえもん</div>
+    <div class="sake-brewery">🏯 大和川酒造（福島）</div>
+    <div class="sake-body">叔母のユミちゃんが愛してやまない、福島のお酒のひとつ。<br>おすすめで教えてもらってから鬼ハマりして、福島に遊びに行くと買って帰ってくるお気に入りです。<br>福島のお酒らしいフレッシュな香りと軽めの酸味が通り過ぎ、淡い苦みもありつつ、スーッと水のように消えていく潔さがとても良い！<br>あっさりしたお刺身でも邪魔しない、どんな料理でも合う万能の食中酒です。<br>都内ではあまり見かけないけど、渋谷の「なぎ」でたまに見かける顔。おすすめです。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">陸奥八仙　特別純米 いさり火</div>
+    <div class="sake-yomi">むつはっせん</div>
+    <div class="sake-brewery">🏯 八戸酒造（青森）</div>
+    <div class="sake-body">陸奥八仙といえば、叔母のチコちゃんと青森・八戸へ行ったとき、「みろく横丁」という呑兵衛ロードで大量の貝やお刺身とともにいただいた、思い出のお酒。<br>青森ではどの居酒屋に入っても絶対に目が合う、堂々たるメジャー銘柄です。<br>なかでも「いさり火」の名を持つこのラベルは、イカ漁船の明かりをイメージしたもの。漁師さんの食中酒として作られたと聞けば、そりゃあお魚と合わないわけがない！<br>すっきり消える、究極の食中酒です。</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ PAGE 3: Section 2 ══ -->
+<div class="page" id="p2">
+<div class="page-inner">
+  <div class="sec-header c2">
+    <div class="sec-bg-num">02</div>
+    <div class="sec-no-row"><div class="sec-no-pill">Section 2</div><div class="sec-no-line"></div></div>
+    <span class="sec-emoji">🌙</span>
+    <div class="sec-title">お酒だけで楽しむ<br>「モダン酒」</div>
+    <div class="sec-intro">
+      <p>Section 1がご飯に寄り添う助演だとしたら、こちらは主演。<br>もちろんおつまみにも合うけれど、お酒そのものの華やかさや個性が引き立つ、モダンでおしゃれなお酒たちです。日本酒って無骨で無口なイメージがあるけれど、色鮮やかで華やかで繊細で、おしゃべりなお酒たちが私は大好き。<br>歴史ある酒造の様々なチャレンジで生まれた、新しいブランドたちをまとめてみました。</p>
+    </div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">産土　2021年〜</div>
+    <div class="sake-yomi">うぶすな</div>
+    <div class="sake-brewery">🏯 花の香酒造（熊本）</div>
+    <div class="sake-body">いつ出会ったか忘れてしまったけど、気づいたら虜になっていたお酒。<br>口の中でぶわっと広がる、フレッシュでみずみずしい果実の香り。口開けで飲むと微炭酸も楽しめて、スパークリングワインみたい。とっても幸せな気持ちになれます。<br>生まれた土地の守護神を表す「産土神（うぶすながみ）」を由来としたコンセプトと、微生物や菌をおしゃれにイラスト化したラベルデザインもなんだかスタイリッシュ。<br>夫におすすめしたところ激ハマりし、一緒にはるばる熊本まで買いにいった思い出も。<br>熊本は古閑牧場というお店で出会った馬刺しが本当〜においしくて、幸せでした。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">ささまさむね　2014年〜</div>
+    <div class="sake-yomi">笹正宗本家（福島）</div>
+    <div class="sake-brewery">🏯 笹正宗本家（福島）</div>
+    <div class="sake-body">こちらも叔母のユミちゃんが愛する福島のお酒のなかの1つ。<br>透き通った酸味とフルーティさが際立って、甘みと旨味が舌に残る感じ。瓶を振って濁らせて飲むと、巨峰のような甘みがふんわり。幸せ！<br>ひらがなラベルの柔らかい雰囲気も味わいにぴったりです。家にお邪魔して飲ませてもらった時は、生酒の炭酸が凄すぎて蓋がぶっ飛んで大騒ぎになりました。天井が汚れたことよりも、貴重な酒が減ったことを嘆く叔母の姿がすごく面白かった思い出。笑</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">彩来　2020年〜</div>
+    <div class="sake-yomi">さら</div>
+    <div class="sake-brewery">🏯 北西酒造（埼玉）</div>
+    <div class="sake-body">湯島の「食と酒 Sel」で好みのお酒のタイプを伝えたら、店員さんにドヤ顔で紹介され、まんまと鬼ハマりしたお酒。<br>マスカットやライチをもっと上品にしたような、やんごとなきフルーティ感。フルーティだけど、ぶわっ！！と顔の周りに広がる感じではなく、お上品に綺麗に広がるのがとっても素敵。<br>香りと甘みと酸味がじわじわ綺麗に消えていく、貴婦人のようなお酒。斜めカットのラベルもとっても珍しくておしゃれ！<br>私はラベル裏の「彩の国から来たりし見知らぬ麗酒」が、とってもお気に入りのコピーです。<br><br>そして、この銘柄を5年かけて生み出した天才はまさかの大学の友人、麻友の旦那さま！<br><br>二人の素敵な結婚式では会場でもお土産でもとっても美味しい日本酒をいただけて、とっても幸せな思い出です。ふふふ。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">光栄菊　スノウ・クレッセント　2019年〜</div>
+    <div class="sake-yomi">こうえいぎく</div>
+    <div class="sake-brewery">🏯 光栄菊酒造（佐賀）</div>
+    <div class="sake-body">十条にある「サケラボトーキョー」という最高のお店......に通い続けると紹介される「椿」というお店にて、ペアリングで出していただいたお酒。<br>華やかで青みのある、メロンや青りんごのようなフルーティさが広がって、きれいに消えていく軽やかなお味です。<br>日本酒の虜になったテレビマンと名杜氏が、廃業した酒造を復活させるというドラマみたいな展開で生み出された銘柄。モダンだけど、ラベルは渋めでちょっとギャップがある。笑<br>あんまり出会わないけれど、店で見かけると嬉しくて頼みがちです。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">天美　純米吟醸 うすにごり 生原酒　2020年〜</div>
+    <div class="sake-yomi">てんび</div>
+    <div class="sake-brewery">🏯 長州酒造（山口）</div>
+    <div class="sake-body">渋谷の「Chintara」で出会ったのが最初だったかな？日本酒好きと話すと、よく名を聞くお酒。児玉酒造として続いてきた酒造を今の長州酒造が引き継いで、新しく立ち上げたブランドです。<br>期間限定で登場するピンクのラベルのこの春酒は、桃色の天美......通称「桃天」と呼ばれる人気者！じゅわっとしたグレープフルーツのような香りと柔らかい苦みが、幸せな気持ちにしてくれます。#多幸感という感じ！<br>五反田にある内藤商店で桃天の取り扱いがあると聞いて、わざわざ歩いて行ったのに買えず、悔しくてネットで取り寄せたことがあります。笑</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ PAGE 4: Section 3 ══ -->
+<div class="page" id="p3">
+<div class="page-inner">
+  <div class="sec-header c3">
+    <div class="sec-bg-num">03</div>
+    <div class="sec-no-row"><div class="sec-no-pill">Section 3</div><div class="sec-no-line"></div></div>
+    <span class="sec-emoji">🍶</span>
+    <div class="sec-title">概念を覆す<br>「変わり種」</div>
+    <div class="sec-intro">
+      <p>日本酒の素材は「水」と「米」と「麹」と「酵母」。<br>それなのに、どうしてこんなに多様な味があるんだろう！と思います。<br>そして、最近はワインのようにプレミア価格のものもチラホラ・・。<br>こんな日本酒が！と世界が広がる日本酒たちをまとめてみました。</p>
+    </div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">三井の寿　純米吟醸 Porcini</div>
+    <div class="sake-yomi">みいのことぶき　ポルチーニ</div>
+    <div class="sake-brewery">🏯 みいの寿（福岡）</div>
+    <div class="sake-body">日比谷ミッドタウンの中にある「立ち飲み三ぶん」で出会ったお酒。<br>なぜなのか全然わからないけれど、ポルチーニ茸のような芳醇な香りがする不思議体験。ラベルにどーんと書かれた可愛いキノコを見たからかしら？とプラシーボ効果を疑って目を閉じて飲んでみたけれど、それでもポルチーニでした。なんでなんだろうーーー！不思議なお酒です。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">飛鸞　Firando</div>
+    <div class="sake-yomi">ひらん</div>
+    <div class="sake-brewery">🏯 森酒造場（長崎）</div>
+    <div class="sake-body">日本酒フリークの私のために夫が連れて行ってくれた「日和」の日本酒ペアリング、トップバッターで登場した低アル日本酒。<br>ワインのエチケットのようなデザインのボトルがとってもおしゃれ。<br>甘さの中に爽やかな酸味と旨味がある、デザートワインのようなお酒です。<br>お店では、オレンジを沈めて炭酸で割って出していて、これまた新鮮な体験でした。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">八王　純米原酒</div>
+    <div class="sake-yomi">やつおう</div>
+    <div class="sake-brewery">🏯 福鶴酒造（富山）</div>
+    <div class="sake-body">両親との富山旅行で通りすがりに発見した酒造。古民家のような佇まいの建物の中でご紹介いただいた、真っ白なお酒。今どきは以下にお米を磨くかを売りにしている銘柄も多い中、驚異の78%を残しているという低精米で造られたお酒。ごはんかな！？くらいのお米の濃厚なコクと、それをまとめる素晴らしいバランスの酸味がとっても新鮮な体験で印象に残っています。<br>こんなのはじめて！でした。</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">富久長　海風土</div>
+    <div class="sake-yomi">ふくちょう　シーフード</div>
+    <div class="sake-brewery">🏯 今田酒造本店（広島）</div>
+    <div class="sake-body">これまた初見殺しのお酒。言葉遊びがセンスあるなあと思います。<br>名前の通りシーフードに合うお酒としてよくおすすめされるお酒！広島のお酒だけあって、牡蠣にもぴったりです。<br>レモンのようなさわやかな酸っぱさは、本当に日本酒！？と疑うほど。ワイングラスで飲むのがおすすめです◎</div>
+  </div>
+
+  <div class="sake-card">
+    <div class="sake-name">Beau Michelle</div>
+    <div class="sake-yomi">ボー・ミッシェル</div>
+    <div class="sake-brewery">🏯 伴野酒造（長野）</div>
+    <div class="sake-body">「醸造中にビートルズを聴かせている」という謎のアピールをしてくるお酒。音楽を聴かせると、味がまろやかになるんだとか。どういうことなのか今も全然意味がわからないけれど、菌も音楽を聴くといい気持ちになるのかな？<br>低アルで、ライチのような甘酸っぱさは本当に上品なデザートワインみたい。ラベルもとってもおしゃれなので、プレゼントにもおすすめです♡</div>
+  </div>
+</div>
+</div>
+
+<!-- ══ PAGE 5: 銘柄リスト ══ -->
+<div class="page" id="p4">
+<div class="page-inner">
+<div class="sake-list-page">
+  <div class="sake-list-header">
+    <div class="sake-list-header-title">🍶 銘柄一覧</div>
+    <div class="sake-list-header-sub">Misaki's Sake Selection · 15銘柄</div>
+  </div>
+
+  <div class="sake-list-section">
+    <div class="sake-list-section-title">🐟 Section 1　究極の食中酒</div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">阿部勘</div>
+      <div class="sake-list-brewery">阿部勘酒造（宮城）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">大信州</div>
+      <div class="sake-list-brewery">大信州酒造（長野）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">満寿泉</div>
+      <div class="sake-list-brewery">桝田酒造店（富山）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">別品 弥右衛門</div>
+      <div class="sake-list-brewery">大和川酒造（福島）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">陸奥八仙　特別純米 いさり火</div>
+      <div class="sake-list-brewery">八戸酒造（青森）</div>
+    </div>
+  </div>
+
+  <div class="sake-list-section">
+    <div class="sake-list-section-title">🌙 Section 2　モダン酒</div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">産土</div>
+      <div class="sake-list-brewery">花の香酒造（熊本）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">ささまさむね</div>
+      <div class="sake-list-brewery">笹正宗本家（福島）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">彩来</div>
+      <div class="sake-list-brewery">北西酒造（埼玉）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">光栄菊　スノウ・クレッセント</div>
+      <div class="sake-list-brewery">光栄菊酒造（佐賀）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">天美　純米吟醸 うすにごり 生原酒</div>
+      <div class="sake-list-brewery">長州酒造（山口）</div>
+    </div>
+  </div>
+
+  <div class="sake-list-section">
+    <div class="sake-list-section-title">🍶 Section 3　変わり種</div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">三井の寿　純米吟醸 Porcini</div>
+      <div class="sake-list-brewery">みいの寿（福岡）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">飛鸞　Firando</div>
+      <div class="sake-list-brewery">森酒造場（長崎）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">八王　純米原酒</div>
+      <div class="sake-list-brewery">福鶴酒造（富山）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">富久長　海風土</div>
+      <div class="sake-list-brewery">今田酒造本店（広島）</div>
+    </div>
+    <div class="sake-list-item">
+      <div class="sake-list-name">Beau Michelle</div>
+      <div class="sake-list-brewery">伴野酒造（長野）</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ══ PAGE 6: 裏表紙 ══ -->
+<div class="page" id="p5">
+<div class="page-inner">
+<div class="back">
+  <div class="back-frame"></div>
+  <div class="back-icon">🍶</div>
+  <div class="back-ttl">最後まで読んでくれて<br>ありがとうございます！</div>
+  <div class="back-hr"></div>
+  <div class="back-msg">気になるものがあったら<br>ぜひ飲んでみてください！<br><br>今日という日が、みなさんにとって<br>楽しい思い出になりますように🥂<br><br>— 新婦 美咲より</div>
+  <button class="back-btn" onclick="goTo(0)">最初から読む</button>
+  <div class="back-copy">美咲のおすすめ酒BOOK · 2025 Wedding</div>
+</div>
+</div>
+</div>
+
+</div></div>
+
+<div id="hint">← スワイプでページをめくる →</div>
+<div id="nav">
+  <button id="btn-prev" onclick="prevPage()">‹</button>
+  <div id="dots"></div>
+  <button id="btn-next" onclick="nextPage()">›</button>
+</div>
+
+<script>
+const PAGES=6; let current=0;
+const pages=Array.from(document.querySelectorAll('.page'));
+const dotsEl=document.getElementById('dots');
+const btnPrev=document.getElementById('btn-prev');
+const btnNext=document.getElementById('btn-next');
+for(let i=0;i<PAGES;i++){const d=document.createElement('div');d.className='dot';dotsEl.appendChild(d);}
+function render(anim=true){
+  const dots=dotsEl.querySelectorAll('.dot');
+  pages.forEach((p,i)=>{
+    if(!anim)p.classList.add('no-anim');else p.classList.remove('no-anim');
+    p.classList.remove('active','prev');
+    if(i<current){p.classList.add('flipped');p.style.zIndex=i+1;}
+    else{p.classList.remove('flipped');p.style.zIndex=PAGES-i;}
+  });
+  if(current>0)pages[current-1].classList.add('prev');
+  if(current<PAGES)pages[current].classList.add('active');
+  dots.forEach((d,i)=>d.classList.toggle('on',i===current));
+  btnPrev.style.opacity=current===0?'.2':'.65';
+  btnNext.style.opacity=current===PAGES-1?'.2':'.65';
+}
+function nextPage(){if(current<PAGES-1){current++;render();}}
+function prevPage(){if(current>0){current--;render();}}
+function goTo(n){current=n;render();}
+let tx0=null,ty0=null;
+document.getElementById('stage').addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;},{passive:true});
+document.getElementById('stage').addEventListener('touchend',e=>{
+  if(tx0===null)return;
+  const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)>Math.abs(dy)*1.2&&Math.abs(dx)>36)dx<0?nextPage():prevPage();
+  tx0=ty0=null;
+},{passive:true});
+let mx0=null;
+document.getElementById('stage').addEventListener('mousedown',e=>{mx0=e.clientX;});
+document.getElementById('stage').addEventListener('mouseup',e=>{
+  if(mx0===null)return;const dx=e.clientX-mx0;
+  if(Math.abs(dx)>48)dx<0?nextPage():prevPage();mx0=null;
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')nextPage();
+  if(e.key==='ArrowLeft')prevPage();
+});
+render(false);
+</script>
+</body>
+</html>
